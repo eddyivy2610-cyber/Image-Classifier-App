@@ -1,0 +1,15 @@
+# TensorFlow for Model Handling
+tensorflow-cpu==2.20.0
+
+# Numerical operations
+numpy>=1.23,<2.0
+
+# Image handling (for uploaded images)
+Pillow>=9.5.0
+
+# Backend API 
+fastapi>=0.110.0
+uvicorn>=0.27.0
+
+#(model loading & stability)
+h5py>=3.10.0
