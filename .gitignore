@@ -19,10 +19,10 @@ backend/.env
 # Machine Learning Models
 # H5/Keras files are usually too large for GitHub (often 50MB - 500MB+).
 # If you want to share the model, upload it to Google Drive or Releases instead.
-*.h5
-*.hdf5
-*.pb
-*.keras
+# *.h5
+# *.hdf5
+# *.pb
+# *.keras
 
 # IDE specific files (PyCharm, VSCode)
 .idea/
