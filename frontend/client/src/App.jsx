@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  UploadCloud, 
-  BrainCircuit, 
-  CheckCircle2, 
-  History, 
-  Zap, 
-  Loader2, 
-  AlertCircle, 
-  RefreshCcw, 
+import {
+  UploadCloud,
+  BrainCircuit,
+  CheckCircle2,
+  History,
+  Zap,
+  Loader2,
+  AlertCircle,
+  RefreshCcw,
   Ghost,
   Fish,
   TreePine,
@@ -51,9 +51,6 @@ const getIconForClass = (className) => {
 
 const Navbar = () => (
   <nav className="navbar">
-    <div className="nav-logo">
-      <BrainCircuit size={20} />
-    </div>
     <span className="nav-title">NeuralVision</span>
   </nav>
 );
@@ -91,7 +88,7 @@ function App() {
       if (!response.ok) throw new Error("Server communication failed.");
       const data = await response.json();
       setResult(data);
-      setHistory(prev => [{...data, thumbnail: preview, id: Date.now()}, ...prev].slice(0, 5));
+      setHistory(prev => [{ ...data, thumbnail: preview, id: Date.now() }, ...prev].slice(0, 5));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -102,8 +99,8 @@ function App() {
   return (
     <div className="app-wrapper">
       <Navbar />
-      
-      <motion.main 
+
+      <motion.main
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="glass-card hero-container"
@@ -115,7 +112,7 @@ function App() {
 
         <AnimatePresence mode="wait">
           {!preview ? (
-            <motion.div 
+            <motion.div
               key="upload"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +129,7 @@ function App() {
               <input type="file" id="fileInput" hidden onChange={(e) => handleFile(e.target.files[0])} />
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="result"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -141,7 +138,7 @@ function App() {
               <div className="image-preview-large">
                 <img src={preview} alt="Preview" />
               </div>
-              
+
               <div className="result-content">
                 {result ? (
                   <>
@@ -161,11 +158,11 @@ function App() {
                         <span className="confidence-value">{(result.confidence * 100).toFixed(1)}%</span>
                       </div>
                       <div className="confidence-meter">
-                        <motion.div 
+                        <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${result.confidence * 100}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
-                          className="confidence-fill" 
+                          className="confidence-fill"
                         />
                       </div>
                     </div>
@@ -202,7 +199,7 @@ function App() {
         )}
       </motion.main>
 
-      <motion.aside 
+      <motion.aside
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         className="glass-card sidebar"
@@ -213,15 +210,15 @@ function App() {
             Recent Analysis
           </h3>
         </div>
-        
+
         <div className="history-list">
           {history.length > 0 ? history.map(item => (
-            <motion.div 
-               key={item.id} 
-               layout 
-               initial={{ opacity: 0, scale: 0.9 }}
-               animate={{ opacity: 1, scale: 1 }}
-               className="history-item"
+            <motion.div
+              key={item.id}
+              layout
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="history-item"
             >
               <img src={item.thumbnail} className="history-thumb" alt="History" />
               <div className="history-info">
