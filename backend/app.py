@@ -21,47 +21,43 @@ app.add_middleware(
 )
 
 # -------------------------------
-# 2. Load Model
+# 2. Lazy Model Loader
 # -------------------------------
-MODEL_PATH = "model/cifar100_finetuned.h5"
+model = None
 
-
-# Check if model file exists before trying to load
-possible_paths = [
-    os.path.join(os.path.dirname(__file__), "model", "cifar100_finetuned.h5"),
-    os.path.join(os.path.dirname(__file__), "cifar100_finetuned.h5"),
-    "model/cifar100_finetuned.h5",
-    "backend/model/cifar100_finetuned.h5",
-    "cifar100_finetuned.h5",
-    "../cifar100_finetuned.h5"
-]
-
-found_model_path = None
-for path in possible_paths:
-    if os.path.exists(path):
-        found_model_path = path
-        break
-
-if not found_model_path:
-    print(f"WARNING: Model file not found. Checked: {possible_paths}")
-    print("Current Working Directory:", os.getcwd())
+def get_model():
+    global model
+    if model is not None:
+        return model
     
-     
-else:
-    print(f"Loading model from {found_model_path}...")
+    # Check if model file exists before trying to load
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), "model", "cifar100_finetuned.h5"),
+        os.path.join(os.path.dirname(__file__), "cifar100_finetuned.h5"),
+        "model/cifar100_finetuned.h5",
+        "backend/model/cifar100_finetuned.h5",
+        "cifar100_finetuned.h5",
+        "../cifar100_finetuned.h5"
+    ]
+
+    found_model_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            found_model_path = path
+            break
+
+    if not found_model_path:
+        print(f"CRITICAL: Model file not found. Checked: {possible_paths}")
+        return None
+    
+    print(f"Loading heavy model from {found_model_path} (Neural Labs initialization)...")
     try:
         model = load_model(found_model_path)
-        print("Model loaded successfully.")
-        
-        # Log input shape
-        try:
-            print(f"Model Input Shape: {model.input_shape}")
-        except:
-            pass
-            
+        print("Model successfully cached in memory.")
+        return model
     except Exception as e:
         print(f"Failed to load model: {e}")
-        model = None
+        return None
 
 # CIFAR-10 class names
 CLASS_NAMES = [
@@ -117,13 +113,14 @@ async def predict(file: UploadFile = File(...)):
 
     # Make prediction
     try:
-        # Ensure model is loaded
-        if 'model' not in globals() or model is None:
+        # Lazily load model if not already cached
+        current_model = get_model()
+        if current_model is None:
              # Fallback for testing if model is missing
-             print("Predict called but model is missing/None")
-             return {"class": "Model Missing", "confidence": 0.0}
+             print("Predict called but model could not be loaded")
+             return {"class": "Model Missing/OOM", "confidence": 0.0}
 
-        preds = model.predict(img)
+        preds = current_model.predict(img)
         pred_class_index = np.argmax(preds[0])
         confidence = float(preds[0][pred_class_index])
         
@@ -142,9 +139,10 @@ async def predict(file: UploadFile = File(...)):
 # -------------------------------
 @app.get("/")
 def read_root():
+    # Use get_model status check without triggering a full load if possible
+    is_loaded = (model is not None)
     return {
         "message": "CIFAR-100 API is running", 
-        "model_status": "loaded" if (('model' in globals()) and model is not None) else "missing",
-        "working_dir": os.getcwd(),
-        "found_at": found_model_path if (('found_model_path' in globals()) and found_model_path) else "none"
+        "model_status": "loaded" if is_loaded else "standby",
+        "working_dir": os.getcwd()
     }
