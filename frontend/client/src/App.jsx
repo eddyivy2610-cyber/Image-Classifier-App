@@ -63,8 +63,11 @@ function App() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
 
-  // API URL - Uses VITE_API_URL environment variable for Vercel deployment
-  const API_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/predict";
+  // API URL - Robustly handles base URLs by appending /predict if missing
+  const rawApiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/predict";
+  const API_URL = rawApiUrl.endsWith("/predict") 
+    ? rawApiUrl 
+    : (rawApiUrl.endsWith("/") ? `${rawApiUrl}predict` : `${rawApiUrl}/predict`);
 
   const handleFile = (selectedFile) => {
     if (!selectedFile || !selectedFile.type.startsWith('image/')) {
