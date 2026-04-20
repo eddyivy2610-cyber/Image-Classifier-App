@@ -80,6 +80,37 @@ body {
   font-size: 1.2rem;
 }
 
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-sub);
+  border: 1px solid var(--card-border);
+}
+
+.status-pill.ready {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.status-pill.ready svg {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
 /* Main Dashboard */
 .hero-container {
   padding: 40px;
@@ -316,8 +347,13 @@ body {
 .status-dot {
   width: 8px;
   height: 8px;
-  background: var(--success);
+  background: #64748b;
   border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.status-dot.ready {
+  background: var(--success);
   box-shadow: 0 0 8px var(--success);
 }
 

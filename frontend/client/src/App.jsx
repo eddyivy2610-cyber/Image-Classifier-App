@@ -1,14 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  UploadCloud,
-  BrainCircuit,
-  CheckCircle2,
-  History,
-  Zap,
-  Loader2,
-  AlertCircle,
-  RefreshCcw,
+import { 
+  UploadCloud, 
+  BrainCircuit, 
+  CheckCircle2, 
+  History, 
+  Zap, 
+  Loader2, 
+  AlertCircle, 
+  RefreshCcw, 
   Ghost,
   Fish,
   TreePine,
@@ -18,7 +18,8 @@ import {
   Bug,
   Users,
   Car,
-  Sparkles
+  Sparkles,
+  Activity
 } from 'lucide-react';
 import './App.css';
 
@@ -49,9 +50,15 @@ const getIconForClass = (className) => {
   return <Sparkles size={32} />;
 };
 
-const Navbar = () => (
+const Navbar = ({ systemStatus }) => (
   <nav className="navbar">
-    <span className="nav-title">NeuralVision</span>
+    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+      <span className="nav-title">NeuralVision</span>
+      <div className={`status-pill ${systemStatus}`}>
+        <Activity size={10} />
+        {systemStatus === 'ready' ? 'System Online' : 'Neural Labs Booting...'}
+      </div>
+    </div>
   </nav>
 );
 
@@ -62,12 +69,31 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [systemStatus, setSystemStatus] = useState('offline');
 
   // API URL - Robustly handles base URLs by appending /predict if missing
   const rawApiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000/predict";
+  const BASE_URL = rawApiUrl.replace(/\/predict$/, "");
   const API_URL = rawApiUrl.endsWith("/predict") 
     ? rawApiUrl 
     : (rawApiUrl.endsWith("/") ? `${rawApiUrl}predict` : `${rawApiUrl}/predict`);
+
+  // System Health Check
+  useEffect(() => {
+    let interval;
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(BASE_URL || "/");
+        if (res.ok) setSystemStatus('ready');
+      } catch (err) {
+        setSystemStatus('offline');
+      }
+    };
+    
+    checkStatus();
+    interval = setInterval(checkStatus, 5000);
+    return () => clearInterval(interval);
+  }, [BASE_URL]);
 
   const handleFile = (selectedFile) => {
     if (!selectedFile || !selectedFile.type.startsWith('image/')) {
@@ -88,12 +114,12 @@ function App() {
 
     try {
       const response = await fetch(API_URL, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error("Server communication failed.");
+      if (!response.ok) throw new Error("Connection failed. Neural Labs might be reloading.");
       const data = await response.json();
       setResult(data);
-      setHistory(prev => [{ ...data, thumbnail: preview, id: Date.now() }, ...prev].slice(0, 5));
+      setHistory(prev => [{...data, thumbnail: preview, id: Date.now()}, ...prev].slice(0, 5));
     } catch (err) {
-      setError(err.message);
+      setError(err.message === "Failed to fetch" ? "System timeout. Please wait 60 seconds and try again." : err.message);
     } finally {
       setLoading(false);
     }
@@ -101,9 +127,9 @@ function App() {
 
   return (
     <div className="app-wrapper">
-      <Navbar />
-
-      <motion.main
+      <Navbar systemStatus={systemStatus} />
+      
+      <motion.main 
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className="glass-card hero-container"
@@ -115,7 +141,7 @@ function App() {
 
         <AnimatePresence mode="wait">
           {!preview ? (
-            <motion.div
+            <motion.div 
               key="upload"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -132,7 +158,7 @@ function App() {
               <input type="file" id="fileInput" hidden onChange={(e) => handleFile(e.target.files[0])} />
             </motion.div>
           ) : (
-            <motion.div
+            <motion.div 
               key="result"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -141,7 +167,7 @@ function App() {
               <div className="image-preview-large">
                 <img src={preview} alt="Preview" />
               </div>
-
+              
               <div className="result-content">
                 {result ? (
                   <>
@@ -161,11 +187,11 @@ function App() {
                         <span className="confidence-value">{(result.confidence * 100).toFixed(1)}%</span>
                       </div>
                       <div className="confidence-meter">
-                        <motion.div
+                        <motion.div 
                           initial={{ width: 0 }}
                           animate={{ width: `${result.confidence * 100}%` }}
                           transition={{ duration: 1, ease: "easeOut" }}
-                          className="confidence-fill"
+                          className="confidence-fill" 
                         />
                       </div>
                     </div>
@@ -178,11 +204,19 @@ function App() {
                   <>
                     <div className="header-section">
                       <h2 className="process-title">Process Image</h2>
-                      <p>Ready to analyze. Optimization complete.</p>
+                      <p>
+                        {systemStatus === 'ready' 
+                          ? 'Ready to analyze. Optimization complete.' 
+                          : 'Neural Labs are warming up in the background...'}
+                      </p>
                     </div>
-                    <button className="btn btn-primary" onClick={classify} disabled={loading}>
+                    <button 
+                      className="btn btn-primary" 
+                      onClick={classify} 
+                      disabled={loading || systemStatus === 'offline'}
+                    >
                       {loading ? <Loader2 className="animate-spin" /> : <Zap />}
-                      {loading ? 'Analyzing Neural Layers...' : 'Run Classification'}
+                      {loading ? 'Analyzing Neural Layers...' : (systemStatus === 'ready' ? 'Run Classification' : 'Waiting for System...')}
                     </button>
                     <button className="btn btn-secondary" onClick={() => { setPreview(null); setFile(null); }}>
                       Cancel
@@ -202,7 +236,7 @@ function App() {
         )}
       </motion.main>
 
-      <motion.aside
+      <motion.aside 
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         className="glass-card sidebar"
@@ -213,15 +247,15 @@ function App() {
             Recent Analysis
           </h3>
         </div>
-
+        
         <div className="history-list">
           {history.length > 0 ? history.map(item => (
-            <motion.div
-              key={item.id}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="history-item"
+            <motion.div 
+               key={item.id} 
+               layout 
+               initial={{ opacity: 0, scale: 0.9 }}
+               animate={{ opacity: 1, scale: 1 }}
+               className="history-item"
             >
               <img src={item.thumbnail} className="history-thumb" alt="History" />
               <div className="history-info">
@@ -239,8 +273,8 @@ function App() {
 
         <div className="sidebar-footer">
           <div className="system-status">
-            <div className="status-dot"></div>
-            System Active
+            <div className={`status-dot ${systemStatus}`}></div>
+            {systemStatus === 'ready' ? 'Engine Ready' : 'Neural Labs Booting'}
           </div>
         </div>
       </motion.aside>

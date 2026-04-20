@@ -1,8 +1,16 @@
 import io
 import os
+import gc
 import numpy as np
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+
+# Optimize TensorFlow memory usage for Render Free Tier
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+os.environ['TF_NUM_INTEROP_THREADS'] = '1'
+os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
+
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from PIL import Image
@@ -54,6 +62,8 @@ def get_model():
     try:
         model = load_model(found_model_path)
         print("Model successfully cached in memory.")
+        # Explicitly collect garbage after heavy loading
+        gc.collect()
         return model
     except Exception as e:
         print(f"Failed to load model: {e}")
