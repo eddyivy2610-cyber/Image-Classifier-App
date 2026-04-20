@@ -142,4 +142,9 @@ async def predict(file: UploadFile = File(...)):
 # -------------------------------
 @app.get("/")
 def read_root():
-    return {"message": "CIFAR-100 API is running", "model_status": "loaded" if os.path.exists(MODEL_PATH) else "missing"}
+    return {
+        "message": "CIFAR-100 API is running", 
+        "model_status": "loaded" if (('model' in globals()) and model is not None) else "missing",
+        "working_dir": os.getcwd(),
+        "found_at": found_model_path if (('found_model_path' in globals()) and found_model_path) else "none"
+    }
