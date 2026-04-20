@@ -10,18 +10,11 @@ from PIL import Image
 # -------------------------------
 # 1. Initialize App & CORS
 # -------------------------------
-app = FastAPI(title="CIFAR-10 Image Classifier API")
-
-# Allow requests from React frontend (Vite default is 5173, CRA default is 3000)
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000"
-]
+app = FastAPI(title="CIFAR-100 Image Classifier API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # For demo purposes, matching frontend deployed on alternative URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,26 +23,65 @@ app.add_middleware(
 # -------------------------------
 # 2. Load Model
 # -------------------------------
-MODEL_PATH = "cifar_model.h5"
+MODEL_PATH = "model/cifar100_finetuned.h5"
+
 
 # Check if model file exists before trying to load
-if not os.path.exists(MODEL_PATH):
-    print(f"⚠️ WARNING: Model file '{MODEL_PATH}' not found in {os.getcwd()}")
-    print("Please place your cifar_model.h5 file in the backend folder.")
-    # We create a dummy model so the server doesn't crash immediately for testing
-    # model = None 
+possible_paths = [
+    os.path.join(os.path.dirname(__file__), "model", "cifar100_finetuned.h5"),
+    os.path.join(os.path.dirname(__file__), "cifar100_finetuned.h5"),
+    "model/cifar100_finetuned.h5",
+    "backend/model/cifar100_finetuned.h5",
+    "cifar100_finetuned.h5",
+    "../cifar100_finetuned.h5"
+]
+
+found_model_path = None
+for path in possible_paths:
+    if os.path.exists(path):
+        found_model_path = path
+        break
+
+if not found_model_path:
+    print(f"WARNING: Model file not found. Checked: {possible_paths}")
+    print("Current Working Directory:", os.getcwd())
+    
+     
 else:
-    print(f"Loading model from {MODEL_PATH}...")
-    model = load_model(MODEL_PATH)
-    print("Model loaded successfully.")
+    print(f"Loading model from {found_model_path}...")
+    try:
+        model = load_model(found_model_path)
+        print("Model loaded successfully.")
+        
+        # Log input shape
+        try:
+            print(f"Model Input Shape: {model.input_shape}")
+        except:
+            pass
+            
+    except Exception as e:
+        print(f"Failed to load model: {e}")
+        model = None
 
 # CIFAR-10 class names
 CLASS_NAMES = [
-    "Airplane", "Automobile", "Bird", "Cat", "Deer",
-    "Dog", "Frog", "Horse", "Ship", "Truck"
+    "Apple", "Aquarium Fish", "Baby", "Bear", "Beaver", "Bed", "Bee", "Beetle", 
+    "Bicycle", "Bottle", "Bowl", "Boy", "Bridge", "Bus", "Butterfly", "Camel", 
+    "Can", "Castle", "Caterpillar", "Cattle", "Chair", "Chimpanzee", "Clock", 
+    "Cloud", "Cockroach", "Couch", "Crab", "Crocodile", "Cup", "Dinosaur", 
+    "Dolphin", "Elephant", "Flatfish", "Forest", "Fox", "Girl", "Hamster", 
+    "House", "Kangaroo", "Keyboard", "Lamp", "Lawn Mower", "Leopard", "Lion", 
+    "Lizard", "Lobster", "Man", "Maple Tree", "Motorcycle", "Mountain", "Mouse", 
+    "Mushroom", "Oak Tree", "Orange", "Orchid", "Otter", "Palm Tree", "Pear", 
+    "Pickup Truck", "Pine Tree", "Plain", "Plate", "Poppy", "Porcupine", 
+    "Possum", "Rabbit", "Raccoon", "Ray", "Road", "Rocket", "Rose", "Sea", 
+    "Seal", "Shark", "Shrew", "Skunk", "Skyscraper", "Snail", "Snake", "Spider", 
+    "Squirrel", "Streetcar", "Sunflower", "Sweet Pepper", "Table", "Tank", 
+    "Telephone", "Television", "Tiger", "Tractor", "Train", "Trout", "Tulip", 
+    "Turtle", "Wardrobe", "Whale", "Willow Tree", "Wolf", "Woman", "Worm"
 ]
 
-IMG_SIZE = 48 
+IMG_SIZE = 96 
 
 # -------------------------------
 # 3. Helper: Process Uploaded Image
@@ -88,6 +120,7 @@ async def predict(file: UploadFile = File(...)):
         # Ensure model is loaded
         if 'model' not in globals() or model is None:
              # Fallback for testing if model is missing
+             print("Predict called but model is missing/None")
              return {"class": "Model Missing", "confidence": 0.0}
 
         preds = model.predict(img)
@@ -99,6 +132,9 @@ async def predict(file: UploadFile = File(...)):
             "confidence": confidence
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Prediction Error: {e}")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 # -------------------------------
@@ -106,4 +142,4 @@ async def predict(file: UploadFile = File(...)):
 # -------------------------------
 @app.get("/")
 def read_root():
-    return {"message": "CIFAR-10 API is running", "model_status": "loaded" if os.path.exists(MODEL_PATH) else "missing"}
+    return {"message": "CIFAR-100 API is running", "model_status": "loaded" if os.path.exists(MODEL_PATH) else "missing"}

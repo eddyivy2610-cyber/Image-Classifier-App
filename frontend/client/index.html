@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CIFAR-10 Classifier</title>
+  <title>CIFAR-100 Classifier</title>
 
   <!-- React & ReactDOM -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -337,7 +337,9 @@
       const [result, setResult] = useState(null);
       const [error, setError] = useState(null);
 
-      const API_URL = "http://127.0.0.1:8000/predict";
+      // --- CONFIGURATION ---
+      // Replace with your Render backend URL (e.g., https://your-backend.onrender.com/predict)
+      const API_URL = "http://127.0.0.1:8000/predict"; 
 
       const classify = async () => {
         if (!file) return;
@@ -385,8 +387,9 @@
 
       return (
         <div className="app-container">
+
           <div className="header">
-            <h1>CIFAR-10 Classifier</h1>
+            <h1>CIFAR-100 Classifier</h1>
             <p>Upload an image to identify objects</p>
           </div>
 

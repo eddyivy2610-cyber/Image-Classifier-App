@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: cifar100-classifier-api
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && gunicorn app:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: MODEL_PATH
+        value: ../cifar100_finetuned.h5

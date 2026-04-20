@@ -36,6 +36,8 @@ backend/.env
 # ==============================
 # Dependencies
 node_modules/
+.postman/
+postman/
 
 # Production / Build folder
 client/dist/
