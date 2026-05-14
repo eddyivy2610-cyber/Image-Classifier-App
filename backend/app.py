@@ -12,7 +12,7 @@ os.environ['TF_NUM_INTEROP_THREADS'] = '1'
 os.environ['TF_NUM_INTRAOP_THREADS'] = '1'
 
 from tensorflow.keras.models import load_model
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+import tensorflow as tf
 from PIL import Image
 
 # -------------------------------
@@ -40,6 +40,9 @@ def get_model():
     
     # Check if model file exists before trying to load
     possible_paths = [
+        os.path.join(os.path.dirname(__file__), "model", "cifar100_efficientnet.h5"),
+        os.path.join(os.path.dirname(__file__), "cifar100_efficientnet.h5"),
+        "cifar100_efficientnet.h5",
         os.path.join(os.path.dirname(__file__), "model", "cifar100_finetuned.h5"),
         os.path.join(os.path.dirname(__file__), "cifar100_finetuned.h5"),
         "model/cifar100_finetuned.h5",
@@ -87,7 +90,7 @@ CLASS_NAMES = [
     "Turtle", "Wardrobe", "Whale", "Willow Tree", "Wolf", "Woman", "Worm"
 ]
 
-IMG_SIZE = 96 
+IMG_SIZE = 32 
 
 # -------------------------------
 # 3. Helper: Process Uploaded Image
@@ -98,7 +101,7 @@ def read_image(file_data: bytes):
         image = image.convert("RGB") # Ensure 3 channels
         image = image.resize((IMG_SIZE, IMG_SIZE))
         image_array = np.array(image, dtype=np.float32)
-        image_array = preprocess_input(image_array)
+        image_array = tf.keras.applications.efficientnet.preprocess_input(image_array)
         image_array = np.expand_dims(image_array, axis=0) # Batch dimension
         return image_array
     except Exception as e:
